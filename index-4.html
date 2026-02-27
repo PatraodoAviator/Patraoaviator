@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aviator Analytics Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#f72585;--violet:#7209b7;--blue:#4361ee;--cyan:#4cc9f0;--bg:#0d0014;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:#f0e6ff;min-height:100vh;overflow-x:hidden;}
+.mono{font-family:'Space Mono',monospace;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 10%,rgba(247,37,133,.18) 0%,transparent 70%),radial-gradient(ellipse 50% 50% at 80% 90%,rgba(114,9,183,.22) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.z1{position:relative;z-index:1;}
+.grad-text{background:linear-gradient(135deg,var(--pink) 0%,#b5179e 40%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.card{background:linear-gradient(135deg,rgba(30,0,46,.95) 0%,rgba(21,0,32,.98) 100%);border:1px solid rgba(247,37,133,.2);border-radius:16px;backdrop-filter:blur(12px);}
+.card-glow{box-shadow:0 0 0 1px rgba(247,37,133,.1),0 8px 32px rgba(114,9,183,.2);}
+.btn-primary{background:linear-gradient(135deg,var(--pink) 0%,var(--violet) 100%);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;transition:all .2s ease;box-shadow:0 4px 20px rgba(247,37,133,.35);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(247,37,133,.5);}
+.btn-sec{background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.3);border-radius:10px;color:var(--pink);font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;transition:all .2s ease;}
+.btn-sec:hover{background:rgba(247,37,133,.2);}
+.tab{border-radius:10px;font-weight:600;cursor:pointer;transition:all .25s ease;border:1px solid transparent;white-space:nowrap;}
+.tab.active{background:linear-gradient(135deg,var(--pink) 0%,var(--violet) 100%);color:#fff;box-shadow:0 4px 16px rgba(247,37,133,.4);}
+.tab:not(.active){background:rgba(255,255,255,.05);color:rgba(240,230,255,.6);border-color:rgba(255,255,255,.08);}
+.tab:not(.active):hover{background:rgba(247,37,133,.12);color:var(--pink);}
+.stat-card{background:linear-gradient(135deg,rgba(247,37,133,.12) 0%,rgba(114,9,183,.12) 100%);border:1px solid rgba(247,37,133,.2);border-radius:14px;transition:transform .2s ease,box-shadow .2s ease;}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(247,37,133,.2);}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:rgba(240,230,255,.5);border-bottom:1px solid rgba(247,37,133,.15);}
+.data-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;}
+.data-table tr:hover td{background:rgba(247,37,133,.06);}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.03);}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--pink),var(--violet));border-radius:3px;}
+.inp{background:rgba(255,255,255,.04);border:1px solid rgba(247,37,133,.2);border-radius:10px;color:#f0e6ff;font-family:'Syne',sans-serif;width:100%;transition:border-color .2s,box-shadow .2s;}
+.inp:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px rgba(247,37,133,.15);}
+.inp::placeholder{color:rgba(240,230,255,.3);}
+.upload-zone{border:2px dashed rgba(247,37,133,.3);border-radius:14px;transition:all .2s ease;cursor:pointer;}
+.upload-zone:hover{border-color:var(--pink);background:rgba(247,37,133,.06);}
+.badge-pink{background:rgba(247,37,133,.15);color:var(--pink);border-radius:6px;font-size:12px;font-weight:700;}
+.badge-cyan{background:rgba(76,201,240,.15);color:var(--cyan);border-radius:6px;font-size:12px;font-weight:700;}
+.badge-violet{background:rgba(114,9,183,.25);color:#c77dff;border-radius:6px;font-size:12px;font-weight:700;}
+.badge-green{background:rgba(6,214,160,.15);color:#06d6a0;border-radius:6px;font-size:12px;font-weight:700;}
+@keyframes neon-pulse{0%,100%{text-shadow:0 0 8px rgba(6,214,160,.6);}50%{text-shadow:0 0 20px rgba(6,214,160,1),0 0 40px rgba(6,214,160,.5);}}
+.neon-green{color:#06d6a0;animation:neon-pulse 2s ease-in-out infinite;}
+@keyframes neon-pink{0%,100%{text-shadow:0 0 8px rgba(247,37,133,.6);}50%{text-shadow:0 0 20px rgba(247,37,133,1);}}
+.neon-pink{color:var(--pink);animation:neon-pink 2s ease-in-out infinite;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.fade-up{animation:fadeUp .5s ease forwards;}
+.d1{animation-delay:.1s;opacity:0;}.d2{animation-delay:.2s;opacity:0;}.d3{animation-delay:.3s;opacity:0;}.d4{animation-delay:.4s;opacity:0;}
+@keyframes fly{0%{transform:translateX(0) rotate(-5deg);}50%{transform:translateX(6px) rotate(5deg);}100%{transform:translateX(0) rotate(-5deg);}}
+.fly{display:inline-block;animation:fly 3s ease-in-out infinite;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(247,37,133,.3),transparent);}
+.slabel{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:rgba(240,230,255,.4);font-weight:700;}
+.op{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-family:'Space Mono',monospace;}
+.op-zero{background:rgba(247,37,133,.2);color:var(--pink);border:1px solid rgba(247,37,133,.4);}
+.op-pos{background:rgba(76,201,240,.1);color:var(--cyan);border:1px solid rgba(76,201,240,.2);}
+.op-neg{background:rgba(240,230,255,.06);color:rgba(240,230,255,.5);border:1px solid rgba(255,255,255,.1);}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;color:rgba(240,230,255,.3);gap:12px;}
+.eico{width:56px;height:56px;background:rgba(247,37,133,.08);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+input[type=file]{display:none;}
+@media(max-width:768px){.two-col{grid-template-columns:1fr !important;}}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 20% 20%,rgba(247,37,133,.25) 0%,transparent 65%),radial-gradient(ellipse 60% 60% at 80% 80%,rgba(114,9,183,.3) 0%,transparent 65%);pointer-events:none;}
+.lcard{position:relative;z-index:1;width:100%;max-width:420px;background:linear-gradient(135deg,rgba(30,0,46,.97) 0%,rgba(18,0,28,.99) 100%);border-radius:24px;border:1px solid rgba(247,37,133,.25);box-shadow:0 0 0 1px rgba(247,37,133,.1),0 24px 60px rgba(114,9,183,.35);padding:40px 36px;margin:20px;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+.shake{animation:shake .4s ease;}
+#app-content{display:none;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lcard" id="lcard">
+    <div style="text-align:center;margin-bottom:32px;">
+      <span class="fly" style="font-size:42px;display:block;margin-bottom:12px;">✈️</span>
+      <h1 style="font-size:24px;font-weight:800;" class="grad-text">Aviator Analytics</h1>
+      <p style="font-size:13px;color:rgba(240,230,255,.4);margin-top:6px;">Acesso restrito - faca login para continuar</p>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em;">Usuario</label>
+      <input type="text" id="lu" placeholder="seu usuario" class="inp" style="padding:12px 16px;font-size:15px;" autocomplete="username">
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em;">Senha</label>
+      <div style="position:relative;">
+        <input type="password" id="lp" placeholder="sua senha" class="inp" style="padding:12px 48px 12px 16px;font-size:15px;" autocomplete="current-password">
+        <button id="tpass" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(240,230,255,.4);padding:0;">
+          <svg id="eico" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        </button>
+      </div>
+    </div>
+    <button id="lbtn" class="btn-primary" style="width:100%;padding:14px;font-size:15px;">Entrar</button>
+    <div id="lerr" style="display:none;margin-top:14px;padding:10px 14px;border-radius:10px;background:rgba(247,37,133,.12);border:1px solid rgba(247,37,133,.3);color:var(--pink);font-size:13px;font-weight:600;text-align:center;">Usuario ou senha incorretos</div>
+    <p style="text-align:center;font-size:11px;color:rgba(240,230,255,.2);margin-top:24px;">Aviator Analytics Pro 2026</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-content">
+
+<header class="z1" style="position:sticky;top:0;background:rgba(13,0,20,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(247,37,133,.15);">
+  <div style="max-width:1280px;margin:0 auto;padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="fly" style="font-size:26px;">✈️</span>
+      <div>
+        <h1 style="font-size:20px;font-weight:800;line-height:1;" class="grad-text">Aviator Analytics</h1>
+        <p style="font-size:11px;color:rgba(240,230,255,.4);margin-top:1px;">Sistema Multiplataforma Pro</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="stat-card" style="padding:8px 14px;display:flex;align-items:center;gap:8px;">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);"></div>
+        <span id="hthresh" class="mono" style="font-size:12px;font-weight:700;">110x</span>
+      </div>
+      <button id="btn-logout" class="btn-sec" style="padding:8px 14px;font-size:13px;display:flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.1);color:rgba(240,230,255,.4);">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Sair
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="z1" style="max-width:1280px;margin:0 auto;padding:28px 20px 60px;">
+
+  <!-- CONFIG -->
+  <section class="card card-glow fade-up" style="padding:24px;margin-bottom:24px;">
+    <p class="slabel" style="margin-bottom:16px;">⚙️ Configuracao</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;">
+      <div>
+        <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:6px;">Threshold Base (x)</label>
+        <input type="number" id="thresh" value="110" min="1" class="inp mono" style="padding:10px 14px;font-size:16px;font-weight:700;color:var(--pink);">
+      </div>
+      <div>
+        <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:6px;">Data de Analise</label>
+        <input type="date" id="date-inp" class="inp" style="padding:10px 14px;color-scheme:dark;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:6px;">Janelas (minutos)</label>
+        <input type="text" id="wins-inp" value="-5, 0, 5, 10, 15, 20, 25" class="inp mono" style="padding:10px 14px;font-size:13px;">
+      </div>
+    </div>
+    <div class="divider" style="margin-bottom:20px;"></div>
+    <div>
+      <label style="font-size:12px;color:rgba(240,230,255,.5);display:block;margin-bottom:8px;">Adicionar Plataforma</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="pname" placeholder="Nome (ex: Estrelabet)" class="inp" style="padding:10px 14px;max-width:220px;flex:1;">
+        <label for="finput" class="upload-zone" style="padding:10px 20px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:rgba(247,37,133,.8);">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Selecionar XLSX / CSV
+        </label>
+        <input type="file" id="finput" accept=".xlsx,.xls,.csv">
+      </div>
+      <p style="font-size:11px;color:rgba(240,230,255,.25);margin-top:6px;">Suporta arquivos Tipminer, Golden Tips e outros formatos</p>
+    </div>
+    <div id="feedback" style="display:none;margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;"></div>
+  </section>
+
+  <!-- TABS -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;" class="fade-up d1">
+    <span class="slabel" style="margin-right:4px;">Plataformas:</span>
+    <div id="ptabs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+  </div>
+
+  <!-- STATS -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px;" class="fade-up d2">
+    <div class="stat-card" style="padding:18px 20px;">
+      <p style="font-size:11px;color:rgba(240,230,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Total Rodadas</p>
+      <p id="st-total" class="mono" style="font-size:28px;font-weight:700;">0</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <p style="font-size:11px;color:rgba(240,230,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Bases Detectadas</p>
+      <p id="st-bases" class="mono neon-pink" style="font-size:28px;font-weight:700;">0</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <p style="font-size:11px;color:rgba(240,230,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Maior Vela</p>
+      <p id="st-max" class="mono neon-green" style="font-size:28px;font-weight:700;">0x</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <p style="font-size:11px;color:rgba(240,230,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Media Vela</p>
+      <p id="st-avg" class="mono" style="font-size:28px;font-weight:700;color:var(--cyan);">0x</p>
+    </div>
+    <div class="stat-card" style="padding:18px 20px;">
+      <p style="font-size:11px;color:rgba(240,230,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Janelas Geradas</p>
+      <p id="st-wins" class="mono" style="font-size:28px;font-weight:700;color:#c77dff;">0</p>
+    </div>
+  </div>
+
+  <!-- TWO COL -->
+  <div class="two-col fade-up d3" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+    <section class="card card-glow" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--violet));display:flex;align-items:center;justify-content:center;font-size:18px;">⚡</div>
+          <div>
+            <h2 style="font-size:15px;font-weight:700;">Bases Detectadas</h2>
+            <p class="slabel">multiplicadores acima do threshold</p>
+          </div>
+        </div>
+        <span id="bases-count" class="badge-pink" style="padding:4px 10px;">0</span>
+      </div>
+      <div class="divider"></div>
+      <div id="bases-list" style="max-height:420px;overflow-y:auto;padding:12px;">
+        <div class="empty"><div class="eico">⚡</div><p style="font-size:13px;">Carregue um arquivo para ver as bases</p></div>
+      </div>
+    </section>
+    <section class="card card-glow" style="padding:0;overflow:hidden;">
+      <div style="padding:20px 20px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;">🪞</div>
+          <div>
+            <h2 style="font-size:15px;font-weight:700;">Espelho Estrutural</h2>
+            <p class="slabel">janelas de tempo projetadas</p>
+          </div>
+        </div>
+        <span id="wins-count" class="badge-cyan" style="padding:4px 10px;">0</span>
+      </div>
+      <div class="divider"></div>
+      <div id="mirror-prev" style="max-height:420px;overflow-y:auto;padding:12px;">
+        <div class="empty"><div class="eico">🪞</div><p style="font-size:13px;">As janelas aparecerao aqui</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TABLE -->
+  <section class="card card-glow fade-up d4" style="padding:0;overflow:hidden;margin-bottom:24px;">
+    <div style="padding:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#b5179e,var(--pink));display:flex;align-items:center;justify-content:center;font-size:18px;">📊</div>
+        <div>
+          <h2 style="font-size:15px;font-weight:700;">Tabela Completa do Espelho</h2>
+          <p class="slabel" id="tbl-sub">aguardando dados</p>
+        </div>
+      </div>
+      <button id="btn-export" class="btn-primary" style="padding:9px 18px;font-size:13px;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+    <div class="divider"></div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Base (hora)</th><th>Vela</th><th>Rodada</th><th>Janela</th><th>Offset</th></tr></thead>
+        <tbody id="tbl-body">
+          <tr><td colspan="6"><div class="empty" style="padding:32px;"><div class="eico">📊</div><p style="font-size:13px;">Carregue dados para ver a tabela</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="tbl-page" style="padding:14px 20px;text-align:center;display:none;">
+      <span id="tbl-count" style="font-size:12px;color:rgba(240,230,255,.35);"></span>
+    </div>
+  </section>
+</main>
+</div><!-- end app -->
+
+<script>
+// -- USUARIOS ----------------------------------------------
+const USUARIOS = [
+  { u: 'admin',    s: 'aviator2026' },
+  { u: 'cliente1', s: 'acesso123'   },
+  { u: 'cliente2', s: 'acesso456'   },
+];
+
+// -- LOGIN -------------------------------------------------
+function checkSess(){
+  try{
+    const r=sessionStorage.getItem('avs');
+    if(!r)return false;
+    const s=JSON.parse(r);
+    if(Date.now()>s.exp){sessionStorage.removeItem('avs');return false;}
+    return true;
+  }catch{return false;}
+}
+function setSess(u){sessionStorage.setItem('avs',JSON.stringify({u,exp:Date.now()+8*3600*1000}));}
+function delSess(){sessionStorage.removeItem('avs');}
+
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-content').style.display='block';
+  document.getElementById('date-inp').valueAsDate=new Date();
+  renderTabs();analyze();
+}
+function showLogin(){
+  document.getElementById('app-content').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+  document.getElementById('lerr').style.display='none';
+}
+
+function doLogin(){
+  const u=document.getElementById('lu').value.trim().toLowerCase();
+  const s=document.getElementById('lp').value;
+  const ok=USUARIOS.find(x=>x.u.toLowerCase()===u&&x.s===s);
+  if(ok){setSess(ok.u);showApp();}
+  else{
+    document.getElementById('lerr').style.display='block';
+    const c=document.getElementById('lcard');
+    c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
+  }
+}
+
+document.getElementById('lbtn').addEventListener('click',doLogin);
+document.getElementById('lp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lu').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lp').focus();});
+document.getElementById('btn-logout').addEventListener('click',()=>{delSess();showLogin();});
+document.getElementById('tpass').addEventListener('click',()=>{
+  const i=document.getElementById('lp');
+  const ico=document.getElementById('eico');
+  if(i.type==='password'){
+    i.type='text';
+    ico.innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>';
+  }else{
+    i.type='password';
+    ico.innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+  }
+});
+
+if(checkSess())showApp();
+
+// -- STATE -------------------------------------------------
+let platforms=new Map();
+let curPlat='demo';
+let threshold=110;
+let winMins=[-5,0,5,10,15,20,25];
+let mirrorData=[];
+
+// -- DEMO DATA ---------------------------------------------
+function genDemo(){
+  const d=[];const b=new Date();b.setHours(0,0,0,0);
+  for(let i=0;i<600;i++){
+    const t=new Date(b.getTime()+i*30000);
+    const x=Math.random()<0.025?Math.floor(Math.random()*1000)+110:parseFloat((Math.random()*100+1).toFixed(2));
+    d.push({hora:t,x,rodada:`R${String(i+1).padStart(5,'0')}`});
+  }
+  return d;
+}
+platforms.set('demo',{name:'Demo',data:genDemo()});
+
+// -- ANALYSIS ----------------------------------------------
+function detectBases(data,thresh){return data.filter(r=>r.x>=thresh);}
+
+function genMirror(bases,wins){
+  const r=[];
+  bases.forEach(row=>{
+    const t=new Date(row.hora);
+    wins.forEach(m=>{
+      r.push({base:fmtTime(t),calda:row.x,rodada:row.rodada||'-',janela:fmtTime(new Date(t.getTime()+m*60000)),off:m});
+    });
+  });
+  return r;
+}
+
+function fmtTime(d){return d.toTimeString().slice(0,8);}
+
+function filterDate(data,ds){
+  if(!ds)return data;
+  return data.filter(r=>new Date(r.hora).toISOString().slice(0,10)===ds);
+}
+
+// -- PARSE DATE --------------------------------------------
+function parseDate(dateVal,timeVal){
+  try{
+    const ds=String(dateVal).trim();
+    const ts=String(timeVal).trim();
+    let iso;
+    if(ds.includes('/')){
+      const p=ds.split('/');
+      // dd/mm/yyyy
+      if(p[0].length<=2) iso=`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+      // yyyy/mm/dd
+      else iso=`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+    } else if(ds.includes('-')){
+      iso=ds;
+    } else return null;
+    const d=new Date(`${iso}T${ts}`);
+    return isNaN(d.getTime())?null:d;
+  }catch{return null;}
+}
+
+// -- PROCESS ROWS ------------------------------------------
+function processRows(rows){
+  const data=[];
+  const SKIP=['tipminer','golden tips','http','www.'];
+  const VKWS=['multiplicador','odd','valor','multiplier','numero','numero','number'];
+
+  rows.forEach((row,idx)=>{
+    // Pular linhas de propaganda
+    const vals=Object.values(row).map(v=>String(v).toLowerCase());
+    if(vals.some(v=>SKIP.some(s=>v.includes(s))))return;
+
+    let tVal=null,dVal=null,xVal=null,rVal=null;
+    for(const k in row){
+      const kl=String(k).toLowerCase().trim();
+      const v=row[k];
+      if(v===null||v===undefined||v==='')continue;
+      if(!tVal&&['horario','horario','hora','time','timestamp'].some(s=>kl.includes(s)))tVal=v;
+      if(!dVal&&(kl==='data'||kl==='date'))dVal=v;
+      if(!xVal&&(kl==='x'||kl==='numero'||kl==='numero'||VKWS.some(s=>kl.includes(s))))xVal=v;
+      if(!rVal&&['rodada','round','id'].some(s=>kl.includes(s)))rVal=v;
+    }
+
+    if(!xVal)return;
+
+    let hora=null;
+    if(dVal&&tVal){
+      hora=parseDate(dVal,tVal);
+    } else if(tVal){
+      if(typeof tVal==='number'){
+        hora=new Date(Date.UTC(1899,11,30)+tVal*86400000);
+      } else hora=new Date(tVal);
+    }
+    if(!hora||isNaN(hora.getTime()))return;
+
+    const x=parseFloat(String(xVal).replace(',','.'));
+    if(isNaN(x))return;
+
+    const rodada=rVal?`#${rVal}`:`R${idx+1}`;
+    data.push({hora,x,rodada});
+  });
+  return data.sort((a,b)=>a.hora-b.hora);
+}
+
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/"/g,''));
+  const VKWS=['multiplicador','odd','valor','multiplier'];
+  let tC=headers.findIndex(h=>['horario','hora','time','timestamp'].some(k=>h.includes(k)));
+  let dC=headers.findIndex(h=>h==='data'||h==='date');
+  let xC=headers.findIndex(h=>h==='x'||h==='numero'||VKWS.some(k=>h.includes(k)));
+  let rC=headers.findIndex(h=>['rodada','round','id'].some(k=>h.includes(k)));
+  if(xC===-1)xC=0;if(tC===-1)tC=1;
+  const data=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
+    if(cols.length<2)continue;
+    const xv=cols[xC];const tv=cols[tC];const dv=dC!==-1?cols[dC]:null;
+    if(!xv||!tv)continue;
+    let hora=null;
+    if(dv) hora=parseDate(dv,tv);
+    else hora=new Date(tv);
+    if(!hora||isNaN(hora.getTime()))continue;
+    const x=parseFloat(xv.replace(',','.'));
+    if(isNaN(x))continue;
+    data.push({hora,x,rodada:rC!==-1?`#${cols[rC]}`:`R${i}`});
+  }
+  return data.sort((a,b)=>a.hora-b.hora);
+}
+
+function parseFile(buf,name){
+  try{
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    return processRows(XLSX.utils.sheet_to_json(ws));
+  }catch(e){
+    return parseCSV(new TextDecoder().decode(buf));
+  }
+}
+
+// -- RENDER ------------------------------------------------
+function updateStats(data,bases,mirror){
+  document.getElementById('st-total').textContent=data.length.toLocaleString('pt-BR');
+  document.getElementById('st-bases').textContent=bases.length.toLocaleString('pt-BR');
+  const mx=bases.length>0?Math.max(...bases.map(b=>b.x)):0;
+  document.getElementById('st-max').textContent=mx.toLocaleString('pt-BR',{maximumFractionDigits:2})+'x';
+  const avg=data.length>0?data.reduce((s,r)=>s+r.x,0)/data.length:0;
+  document.getElementById('st-avg').textContent=avg.toFixed(2)+'x';
+  document.getElementById('st-wins').textContent=mirror.length.toLocaleString('pt-BR');
+  document.getElementById('hthresh').textContent=`>= ${threshold}x`;
+}
+
+function renderBases(bases){
+  document.getElementById('bases-count').textContent=bases.length.toLocaleString('pt-BR');
+  const c=document.getElementById('bases-list');
+  if(bases.length===0){c.innerHTML=`<div class="empty"><div class="eico">🔍</div><p style="font-size:13px;">Nenhuma base com threshold ${threshold}x</p></div>`;return;}
+  c.innerHTML=bases.slice(0,60).map((b,i)=>{
+    const big=b.x>=500;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;margin-bottom:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);transition:all .15s;" onmouseover="this.style.background='rgba(247,37,133,.07)';this.style.borderColor='rgba(247,37,133,.2)'" onmouseout="this.style.background='rgba(255,255,255,.03)';this.style.borderColor='rgba(255,255,255,.04)'">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="mono" style="font-size:11px;color:rgba(240,230,255,.25);width:22px;text-align:right;">${i+1}</span>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+            <span class="mono" style="font-size:13px;font-weight:700;">${fmtTime(new Date(b.hora))}</span>
+            <span style="background:rgba(114,9,183,.3);border:1px solid rgba(195,119,255,.35);border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;color:#c77dff;font-family:'Space Mono',monospace;">${b.rodada}</span>
+          </div>
+          <div style="font-size:11px;color:rgba(240,230,255,.3);">Rodada detectada</div>
+        </div>
+      </div>
+      <span class="${big?'badge-green':'badge-pink'} mono" style="padding:5px 12px;font-size:15px;font-weight:700;">${b.x.toLocaleString('pt-BR',{maximumFractionDigits:2})}x</span>
+    </div>`;
+  }).join('');
+  if(bases.length>60)c.innerHTML+=`<div style="text-align:center;padding:10px;font-size:12px;color:rgba(240,230,255,.3);">+ ${(bases.length-60).toLocaleString('pt-BR')} bases nao exibidas</div>`;
+}
+
+function renderMirrorPrev(mirror){
+  document.getElementById('wins-count').textContent=mirror.length.toLocaleString('pt-BR');
+  const c=document.getElementById('mirror-prev');
+  if(mirror.length===0){c.innerHTML=`<div class="empty"><div class="eico">🪞</div><p style="font-size:13px;">Nenhuma janela gerada</p></div>`;return;}
+  const g={};
+  mirror.forEach(m=>{if(!g[m.base])g[m.base]=[];g[m.base].push(m);});
+  const keys=Object.keys(g).slice(0,6);
+  c.innerHTML=keys.map(base=>{
+    const ws=g[base];const vela=ws[0].calda;const big=vela>=500;
+    return `<div style="background:rgba(255,255,255,.025);border:1px solid rgba(247,37,133,.12);border-radius:12px;padding:12px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="mono" style="font-size:13px;font-weight:700;color:var(--pink);">${base}</span>
+          <span class="${big?'badge-green':'badge-violet'} mono" style="padding:2px 8px;">${vela.toLocaleString('pt-BR',{maximumFractionDigits:2})}x</span>
+          <span style="background:rgba(114,9,183,.3);border:1px solid rgba(195,119,255,.35);border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;color:#c77dff;font-family:'Space Mono',monospace;">${ws[0].rodada}</span>
+        </div>
+        <span class="badge-pink" style="padding:2px 8px;">${ws.length} janelas</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${ws.map(w=>`<span class="op ${w.off===0?'op-zero':w.off>0?'op-pos':'op-neg'}">${w.janela} <span style="opacity:.6;">${w.off>=0?'+':''}${w.off}m</span></span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  const rem=Object.keys(g).length-keys.length;
+  if(rem>0)c.innerHTML+=`<div style="text-align:center;padding:8px;font-size:12px;color:rgba(240,230,255,.3);">+ ${rem} bases nao exibidas no preview</div>`;
+}
+
+function renderTable(mirror){
+  const tbody=document.getElementById('tbl-body');
+  const sub=document.getElementById('tbl-sub');
+  const page=document.getElementById('tbl-page');
+  if(mirror.length===0){
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty" style="padding:32px;"><div class="eico">📊</div><p style="font-size:13px;">Carregue dados para ver a tabela</p></div></td></tr>`;
+    sub.textContent='aguardando dados';page.style.display='none';return;
+  }
+  const lim=150;
+  sub.textContent=`${mirror.length.toLocaleString('pt-BR')} registros totais`;
+  tbody.innerHTML=mirror.slice(0,lim).map((r,i)=>{
+    const big=r.calda>=500;const zero=r.off===0;
+    return `<tr>
+      <td class="mono" style="color:rgba(240,230,255,.3);font-size:11px;">${String(i+1).padStart(3,'0')}</td>
+      <td class="mono" style="color:var(--pink);font-weight:700;">${r.base}</td>
+      <td class="mono" style="font-weight:700;color:${big?'#06d6a0':'#f0e6ff'};${big?'text-shadow:0 0 10px rgba(6,214,160,.5);':''}">${r.calda.toLocaleString('pt-BR',{maximumFractionDigits:2})}x</td>
+      <td class="mono" style="color:rgba(240,230,255,.4);font-size:12px;">${r.rodada}</td>
+      <td class="mono" style="color:var(--cyan);">${r.janela}</td>
+      <td><span class="op ${zero?'op-zero':r.off>0?'op-pos':'op-neg'}">${r.off>=0?'+':''}${r.off}m</span></td>
+    </tr>`;
+  }).join('');
+  if(mirror.length>lim){
+    page.style.display='block';
+    document.getElementById('tbl-count').textContent=`Exibindo ${lim} de ${mirror.length.toLocaleString('pt-BR')} registros - exporte CSV para ver tudo`;
+  } else page.style.display='none';
+}
+
+function renderTabs(){
+  const c=document.getElementById('ptabs');
+  c.innerHTML=Array.from(platforms.entries()).map(([k,p])=>
+    `<button class="tab ${k===curPlat?'active':''}" style="padding:7px 16px;font-size:13px;" data-k="${k}">${p.name}</button>`
+  ).join('');
+  c.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{curPlat=b.dataset.k;analyze();renderTabs();}));
+}
+
+function analyze(){
+  const p=platforms.get(curPlat);if(!p)return;
+  const data=filterDate(p.data,document.getElementById('date-inp').value);
+  const bases=detectBases(data,threshold);
+  mirrorData=genMirror(bases,winMins);
+  updateStats(data,bases,mirrorData);
+  renderBases(bases);renderMirrorPrev(mirrorData);renderTable(mirrorData);
+}
+
+function showFeedback(msg,type){
+  const el=document.getElementById('feedback');
+  el.style.display='block';
+  el.style.background=type==='ok'?'rgba(6,214,160,.12)':'rgba(247,37,133,.12)';
+  el.style.border=`1px solid ${type==='ok'?'rgba(6,214,160,.3)':'rgba(247,37,133,.3)'}`;
+  el.style.color=type==='ok'?'#06d6a0':'var(--pink)';
+  el.textContent=msg;
+  setTimeout(()=>el.style.display='none',5000);
+}
+
+// -- EVENTS ------------------------------------------------
+document.getElementById('thresh').addEventListener('input',e=>{threshold=parseInt(e.target.value)||110;document.getElementById('hthresh').textContent=`>= ${threshold}x`;analyze();});
+document.getElementById('date-inp').addEventListener('change',analyze);
+document.getElementById('wins-inp').addEventListener('change',e=>{
+  const p=e.target.value.split(',').map(v=>parseInt(v.trim())).filter(v=>!isNaN(v));
+  if(p.length>0){winMins=p;analyze();}
+});
+
+document.getElementById('finput').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const name=document.getElementById('pname').value.trim()||f.name.split('.')[0];
+  const key=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      const data=parseFile(ev.target.result,f.name);
+      if(data.length===0){showFeedback('Nenhum dado valido encontrado. Verifique as colunas.','err');return;}
+      platforms.set(key,{name,data});
+      curPlat=key;renderTabs();analyze();
+      showFeedback(`${name}: ${data.length.toLocaleString('pt-BR')} registros carregados!`,'ok');
+      document.getElementById('pname').value='';e.target.value='';
+    }catch(err){showFeedback('Erro ao processar o arquivo. Tente novamente.','err');}
+  };
+  rd.readAsArrayBuffer(f);
+});
+
+document.getElementById('btn-export').addEventListener('click',()=>{
+  if(mirrorData.length===0)return;
+  const h=['base','calda','rodada','janela','off'];
+  const csv=[h.join(','),...mirrorData.map(r=>h.map(k=>r[k]).join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`espelho_${curPlat}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+</script>
+</body>
+</html>
